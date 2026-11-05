@@ -14,8 +14,9 @@ Subcommands:
       A developer.apple.com/documentation page. Those pages render client-side, so
       a plain fetch returns an empty shell; this reads the same content from the
       DocC JSON that the page itself loads (/tutorials/data/documentation/....json).
-  page URL [--out FILE]
-      Any https page on an Apple developer host, as text.
+  page URL [--out FILE] [--keep-nav]
+      Any https page on an Apple developer host, as text. Only the page's <main>
+      content is kept (site navigation and footer dropped) unless --keep-nav is given.
   lookup APP_ID [APP_ID ...] [--country CC]
       App Store IDs -> app name, bundle ID and seller (iTunes Lookup API).
 
@@ -34,7 +35,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import date, datetime
+from datetime import date
 from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
 
@@ -94,16 +95,19 @@ class _TextParser(HTMLParser):
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
-        self.lines, self.buf, self.skip = [], [], 0
+        self.lines, self.buf, self.skip, self.in_main = [], [], 0, 0
 
     def _flush(self, prefix=""):
         text = " ".join("".join(self.buf).split())
         if text:
-            self.lines.append(prefix + text)
+            self.lines.append((prefix + text, self.in_main > 0))
         self.buf = []
 
     def handle_starttag(self, tag, attrs):
-        if tag in self.SKIP:
+        if tag == "main":
+            self._flush()
+            self.in_main += 1
+        elif tag in self.SKIP:
             self.skip += 1
         elif tag in self.BLOCK:
             self._flush()
@@ -111,7 +115,10 @@ class _TextParser(HTMLParser):
                 self.buf.append("• ")
 
     def handle_endtag(self, tag):
-        if tag in self.SKIP:
+        if tag == "main":
+            self._flush()
+            self.in_main = max(0, self.in_main - 1)
+        elif tag in self.SKIP:
             self.skip = max(0, self.skip - 1)
         elif tag in self.BLOCK:
             self._flush("## " if tag in self.HEAD else "")
@@ -121,12 +128,17 @@ class _TextParser(HTMLParser):
             self.buf.append(data)
 
 
-def html_to_text(raw_html):
+def html_to_text(raw_html, main_only=False):
+    """Plain text, one block per line. main_only keeps the <main> element's text when the
+    page has one (falls back to the whole page otherwise)."""
     parser = _TextParser()
     parser.feed(raw_html)
     parser.close()
     parser._flush()
-    return "\n".join(parser.lines) + "\n"
+    lines = parser.lines
+    if main_only and any(in_main for _, in_main in lines):
+        lines = [entry for entry in lines if entry[1]]
+    return "\n".join(text for text, _ in lines) + "\n"
 
 
 # ---------------------------------------------------------------- DocC JSON -> text
@@ -302,7 +314,7 @@ def cmd_doc(args):
 
 
 def cmd_page(args):
-    text = html_to_text(fetch(args.url).decode("utf-8", "replace"))
+    text = html_to_text(fetch(args.url).decode("utf-8", "replace"), main_only=not args.keep_nav)
     if args.out:
         print(f"page: {write_out(text, args.out, 'page.txt')} ({len(text)} chars)")
     else:
@@ -346,6 +358,7 @@ def main(argv=None):
     p = sub.add_parser("page")
     p.add_argument("url")
     p.add_argument("--out")
+    p.add_argument("--keep-nav", action="store_true")
     p.set_defaults(func=cmd_page)
     p = sub.add_parser("lookup")
     p.add_argument("ids", nargs="+")

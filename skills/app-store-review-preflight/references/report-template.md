@@ -31,6 +31,10 @@ Fix: <concrete change>. <New build: yes/no.>
 
 … (ordered by severity, then confidence)
 
+## Previous issues (only when a rejection or an earlier report exists)
+| Earlier item | Source | Status now (commit / in uploaded build / App Store Connect / open) |
+|---|---|---|
+
 ## Submission checklist (App Store Connect, before Submit)
 - [ ] Build <version (build)> uploaded, processed and attached to the version
 - [ ] Every product the build sells is approved, or ready and added to the version
@@ -38,6 +42,9 @@ Fix: <concrete change>. <New build: yes/no.>
 - [ ] Export compliance answered
 - [ ] Review notes updated (…)
 - [ ] App Privacy answers published to match the SDKs
+
+## Compliance notes (outside App Review)
+- <for example: EU consent for ads and analytics (GDPR, Google's policy): status>
 
 ## Clean areas
 - <Area>: no findings (<one-line reason>).

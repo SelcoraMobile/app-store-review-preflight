@@ -93,8 +93,13 @@ Run an App Store review preflight on this app.
 You can also invoke `/app-store-review-preflight`. Give it the app's Apple ID if you want
 App Store Connect checked through a signed-in browser.
 
-The skill works through ten steps:
+After a rejection, paste the message from App Review. The skill starts from it, checks
+whether each point is fixed in code, in an uploaded build and in App Store Connect, and
+then audits the rest.
 
+The skill works through these steps:
+
+0. Earlier rejection or preflight report, if there is one
 1. Live sources
 2. Repository inventory
 3. App Store Connect state
@@ -128,7 +133,7 @@ All scripts are Python 3 standard library only, read-only, and run as `python3 -
 
 | Script | What it does |
 |---|---|
-| `fetch_apple.py` | Fetches the whole guidelines page, Apple Developer News since a date, `developer.apple.com/documentation` pages through their DocC JSON, other Apple pages, and App Store ID lookups. HTTPS to Apple hosts only. |
+| `fetch_apple.py` | Fetches the whole guidelines page, Apple Developer News since a date, `developer.apple.com/documentation` pages through their DocC JSON, other Apple pages (main content only), and App Store ID lookups. HTTPS to Apple hosts only. |
 | `guideline_sections.py` | Lists, prints or greps guideline sections by number from the fetched text. |
 | `inventory.py` | Inventories the repository: targets, merged release settings, generated Info.plist keys, purpose-string localizations, entitlements, privacy manifests, packages and pods, SDK detection, source signals, App Store IDs, hosts, git state, and mechanical flags. |
 | `check_links.py` | Checks that URLs answer and that App Store IDs belong to the app's bundle ID. Skips private hosts. Its `--text` mode prints a page as text, for privacy policies. |

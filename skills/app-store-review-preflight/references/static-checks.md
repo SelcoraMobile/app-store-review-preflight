@@ -249,6 +249,14 @@ app from the App Store and termination of your developer account."
 - **Obfuscated feature code:** selectors and class names built from decoded strings,
   base64/XOR blobs turned into symbols, obfuscator build phases. Encrypting an API key is
   not feature hiding; the finding needs a feature behind the obfuscation.
+- **Server-side review targeting:**
+  - What to look for: backend fields or columns that mark Apple, reviewers or test devices
+    (`is_apple`, `isReviewer`, test-device lists), Apple IP ranges, region or date
+    switches.
+  - App side: a flag decoded into a response model and never read is a cleanup note.
+    Remove it, because its name invites the wrong reading.
+  - Server side: a flag that changes features, prices or paywalls for reviewers is
+    reviewer detection.
 - **Post-review payment swaps** (review-risk, also cite 3.1.1):
   - A remote toggle that replaces IAP with web checkout.
   - A hard paywall, or a removal of free uses, that can be switched on after review. See

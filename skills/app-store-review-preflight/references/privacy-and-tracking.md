@@ -101,6 +101,15 @@ targeted advertising or advertising measurement, or sharing it with data brokers
   Report a pre-prompt that pressures (for example a single "Allow" path with no decline,
   or an incentive for allowing) as a review-risk under 5.1.1(iv). Report ATT-specific
   pressure under 5.1.2(i).
+- **SDK-owned pre-dialogs count.** Engagement, paywall and push SDKs often show their own
+  pre-dialog, configured from a dashboard. `inventory.py` reports a
+  `permission_pre_dialog` signal for them.
+  - A pre-dialog built with `UIAlertController` looks like the system alert. With an
+    "Allow" button it reads as mimicking it.
+  - A "Later" button that skips the system dialog is common and usually accepted; the risk
+    is the look-alike alert.
+  - Safer setups: a direct system prompt, or a custom screen with "Continue" and
+    "Not now".
 - **Purpose strings** must "clearly and completely describe your use of the data"
   (5.1.1(ii)). Check the text in each shipped language.
 - **Data minimization (5.1.1(iii)):** prefer the out-of-process picker or share sheet over

@@ -12,5 +12,10 @@ Apps which feature content from a specific community of users called "creators" 
 • (b) If you offer in-app purchases in your app, make sure they are complete, up-to-date, visible to the reviewer and functional.
 • 2.3.1
 • (a) All new features, functionality, and product changes must be described with specificity in the Notes for Review section.
+## 3. Business
+• 3.1.2 Subscriptions: Apps may offer auto-renewable in-app purchase subscriptions.
+• 3.1.2(a) Permissible uses: If you offer an auto-renewable subscription, you must provide ongoing value to the customer.
+• 3.1.2(c) Subscription Information: Before asking a customer to subscribe, you should clearly describe what the user will get for the price.
+• 3.1.3 Other Purchase Methods: The following apps may use purchase methods other than in-app purchase.
 Last Updated: October 16, 2026
 ## Developer Footer

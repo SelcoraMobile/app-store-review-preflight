@@ -2,10 +2,10 @@
 name: app-store-review-preflight
 description: Pre-submission App Store review audit for iOS and iPadOS apps. Reads the Xcode project, the App Store Connect state (metadata, subscriptions, App Privacy answers, builds, availability) and the live App Review Guidelines, then reports likely rejections and upload blockers, each tied to a guideline number or upload validation with evidence, a fix and a confidence level. Use before submitting an app or update, after a rejection, or when the user asks about App Review, review guidelines, rejection risk, App Store Connect readiness, privacy labels, paywall or subscription compliance, or whether the app will pass review.
 license: MIT
-compatibility: Needs network access to developer.apple.com and Python 3 for the bundled scripts (stdlib only). Built for repositories with an Xcode project or Swift package. App Store Connect checks need read access through an API tool, a signed-in browser session, or metadata the user pastes.
+compatibility: Needs network access to developer.apple.com (and to vendor documentation pages for SDK checks) and Python 3 for the bundled scripts (stdlib only). Built for repositories with an Xcode project or Swift package. App Store Connect checks need read access through an API tool, a signed-in browser session, or metadata the user pastes.
 metadata:
   author: Selcora Mobile
-  version: "1.0.0"
+  version: "1.1.0"
   homepage: https://github.com/SelcoraMobile/app-store-review-preflight
   based-on: https://github.com/dabodamjan/app-store-rejection-checker (MIT)
 allowed-tools: Read Grep Glob WebFetch WebSearch
@@ -18,9 +18,16 @@ configuration in the repository, the state of App Store Connect, and the current
 the App Review Guidelines. Report what is likely to be rejected or refused at upload,
 with evidence and a concrete fix for each item.
 
-`<skill>` below means this skill's directory (the folder that holds this file). Run the
-scripts with `python3 -I <skill>/scripts/<name>.py`. They are read-only and stdlib-only;
-they write only to the output paths you give them (or the system temp folder).
+`<skill>` below means this skill's directory (the folder that holds this file). `<tmp>` is a
+scratch folder outside the repository, such as your scratchpad or the system temp folder.
+Run the scripts with `python3 -I <skill>/scripts/<name>.py`. They are read-only and
+stdlib-only; they write only to the output paths you give them, or to the system temp
+folder.
+
+**Permissions.** `allowed-tools` pre-approves only read tools. The scripts run through the
+shell under the agent's normal permission prompts. If your harness treats `allowed-tools`
+as a strict allow-list, either enable the shell tool or run the scripts yourself and paste
+their output.
 
 ## Ground rules
 
@@ -42,6 +49,23 @@ they write only to the output paths you give them (or the system temp folder).
    tokens, cookies, passwords, demo-account passwords.
 6. **Language.** Write the report in the user's language; keep guideline quotes in English.
 
+## Step 0: start from what is already known
+
+**After a rejection:** get the rejection message. Ask for it, or read it from App Store
+Connect when you have access, and quote it in the report.
+
+**Earlier preflight reports:** if the repository has one (`APP_REVIEW_PREFLIGHT.md`, or a
+file the user names), read it.
+
+**Status of earlier issues:** for each one, record where it stands now:
+
+- fixed in code (commit)
+- fixed in a build that is uploaded and attached to the version
+- fixed in App Store Connect
+- still open
+
+These go into the report's "Previous issues" section, and a rejection's points come first.
+
 ## Step 1: live sources
 
 Fetch the primary sources with the bundled script. It downloads the whole page, so quotes
@@ -50,7 +74,7 @@ paraphrase them):
 
 ```bash
 python3 -I <skill>/scripts/fetch_apple.py guidelines --out <tmp>/guidelines.txt
-python3 -I <skill>/scripts/guideline_sections.py <tmp>/guidelines.txt show 1.2 2.1 2.3.2 3.1.2 5.1.1 5.1.2
+python3 -I <skill>/scripts/guideline_sections.py <tmp>/guidelines.txt show 1.2 2.1 2.3.2 3.1.2 5.1.1 5.1.2   # lettered parts such as 3.1.2(c) are included
 python3 -I <skill>/scripts/guideline_sections.py <tmp>/guidelines.txt grep "third-party AI"
 python3 -I <skill>/scripts/fetch_apple.py news --since <date in references/recent-changes.md>
 python3 -I <skill>/scripts/fetch_apple.py page https://developer.apple.com/news/upcoming-requirements/ --out <tmp>/upcoming.txt
@@ -108,6 +132,17 @@ or text to its own server, find out what that server forwards (read the backend 
 if it is available, or ask). An AI provider behind your server is still third-party AI
 under 5.1.2(i).
 
+On the server, also look for review-time targeting:
+
+- flags or columns that mark Apple, reviewers or test devices (`is_apple`, `isReviewer`,
+  test-device lists)
+- Apple IP ranges
+- switches based on region or date that change what the app receives
+
+A flag that only exists in a response model and is never read is a cleanup note. One that
+changes content, features or prices for reviewers is a 2.5.19 finding at the top of the
+report.
+
 ## Step 3: App Store Connect state
 
 App Store Connect is half of what App Review sees. Read it instead of asking for it
@@ -141,6 +176,16 @@ Work through `references/upload-validation.md`:
 - **Privacy manifests:** required-reason APIs, and SDK manifests and signatures.
 - **Code and binary:** deprecated APIs, push entitlement, extension versions, export
   compliance.
+
+**Which build gets reviewed.**
+
+- Compare the upload time of the build attached to the version (from App Store Connect,
+  converted to UTC) with
+  `git log --since=<upload time in UTC> --format='%h %cI %s'`.
+- Fixes committed after that upload are not in the build. Each one needs the next build:
+  say so in the finding, and give the build number that upload needs.
+- `inventory.py` flags uncommitted edits to `CURRENT_PROJECT_VERSION` and
+  `MARKETING_VERSION`.
 
 ## Step 5: static checks
 
@@ -239,18 +284,30 @@ not commit the file unless asked.
    Fix: the concrete change; say whether it needs a new build or only App Store Connect
    ```
 
-4. **Submission checklist:** what must happen in App Store Connect before Submit.
-5. **Clean areas:** one line each.
-6. **Not checked.**
-7. **Verification note.**
+4. **Previous issues** (when Step 0 found any): each earlier rejection point or report
+   item with its status now.
+5. **Submission checklist:** what must happen in App Store Connect before Submit.
+6. **Compliance notes (outside App Review):** for example EU consent for ads and
+   analytics.
+7. **Clean areas:** one line each.
+8. **Not checked.**
+9. **Verification note.**
 
 **Confidence levels.** These three and nothing else:
 
 - **validator-certain:** Apple's upload validation or App Store Connect will block this
-  deterministically, **and** the evidence reflects what actually ships. That means an
-  archive, `.app` or `.ipa`; target-resolved build settings (`xcodebuild -showBuildSettings`);
-  or the processed build and product states in App Store Connect. Source or lockfile
-  evidence alone never reaches this level.
+  deterministically, **and** the evidence reflects what actually ships. Evidence that
+  qualifies:
+  - an archive, `.app` or `.ipa`
+  - the processed build and product states in App Store Connect
+  - target-resolved build settings
+
+  The `project.pbxproj` values from `inventory.py` count as resolved when the target has
+  no `.xcconfig` (the inventory lists them) and the value is a literal with no `$(…)`.
+  Otherwise use `xcodebuild -showBuildSettings`. Ask before running it: it can resolve
+  packages over the network and write to DerivedData or `.swiftpm` folders.
+
+  Source or lockfile evidence alone never reaches this level.
 - **review-risk:** a pattern reviewers reject repeatedly, backed by the live text or the
   references, with clear evidence.
   - When upload validation would block it but the evidence is source-only, write

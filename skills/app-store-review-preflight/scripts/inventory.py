@@ -318,7 +318,9 @@ SIGNALS = OrderedDict([
     ("account_deletion", (r"deleteUser|deleteAccount|delete_account|user\.delete\(|currentUser\?\.delete|removeAccount|/account/delete", [])),
     # tracking / remote config / review detection
     ("remote_config", (r"RemoteConfig\.remoteConfig|remoteConfig\.|configValue\(forKey|LaunchDarkly|LDClient|Statsig|ConfigCat|Optimizely|GrowthBook", [])),
-    ("reviewer_detection", (r"isReview|reviewMode|appReview|isAppleReviewer|underReview|sandboxReceipt|AppTransaction\.shared|\.environment\s*==\s*\.sandbox|17\.0\.0\.0|Cupertino", [])),
+    ("reviewer_detection", (r"isReview|reviewMode|reviewerMode|appReview|isAppleReviewer|isReviewer|is_reviewer|isApple\b|is_apple|isTestDevice|underReview|sandboxReceipt|AppTransaction\.shared|\.environment\s*==\s*\.sandbox|17\.0\.0\.0|Cupertino", [])),
+    ("ump_usage", (r"ConsentInformation|ConsentForm|requestConsentInfoUpdate|UMPConsent", [])),
+    ("permission_pre_dialog", (r"preDialog|PreDialog|prePrompt|PrePrompt|primerView|PermissionPrimer|softPrompt|SoftPrompt|askPushPreDialog", [])),
     ("debug_gestures", (r"motionEnded|debugMenu|DebugMenu|secretTap|tapCount\s*>=", [])),
     ("process_environment", (r"ProcessInfo\.processInfo\.(environment|arguments)", [])),
     # background work (for UIBackgroundModes)
@@ -404,6 +406,8 @@ APPSTORE_ID_RE = re.compile(
     r"|itms-apps://[^\s\"']*?id(\d{6,12})"
     r"|/id\\\((\d{6,12})\)"
     r"|\b(?:appStoreI[dD]|appleI[dD]|appI[dD]|kAppStoreID)\b\s*[:=]\s*\"?(\d{6,12})")
+ALERT_RE = re.compile(r"UIAlertController\(|\.alert\(|\bAlert\(|confirmationDialog\(")
+PERMISSION_RE = re.compile(r"requestAuthorization\(options:|requestTrackingAuthorization|requestWhenInUseAuthorization|requestAlwaysAuthorization|requestPushAuthorization|AVCaptureDevice\.requestAccess|requestAccess\(for")
 IMPORT_RE = re.compile(r"(?:#import\s+[<\"]|@import\s+|import\s+(?:class\s+|struct\s+|enum\s+|protocol\s+|func\s+|typealias\s+)?)([A-Za-z_][A-Za-z0-9_]*)")
 URL_RE = re.compile(r"https?://[A-Za-z0-9.\-]+(?::\d+)?(?:/[^\s\"'<>()\\]*)?")
 
@@ -452,6 +456,13 @@ def scan_sources(root, max_hits):
         files += 1
         mask = debug_mask(lines)
         relpath = rel(path, root)
+        joined = "\n".join(lines)
+        if ALERT_RE.search(joined) and PERMISSION_RE.search(joined):
+            m_alert = ALERT_RE.search(joined)
+            line_no = joined[:m_alert.start()].count("\n") + 1
+            counts["permission_pre_dialog"] += 1
+            if len(hits["permission_pre_dialog"]) < max_hits:
+                hits["permission_pre_dialog"].append(f"{relpath}:{line_no}: alert and permission request in the same file")
         in_block_comment = False
         for idx, line in enumerate(lines):
             stripped = line.strip()
@@ -580,6 +591,27 @@ def read_infoplist_strings(root):
             for lang in val.get("localizations", {}):
                 localized[key].add(lang)
     return {k: sorted(v) for k, v in sorted(localized.items())}
+
+
+def version_changes(root):
+    """Uncommitted edits to MARKETING_VERSION / CURRENT_PROJECT_VERSION in project files."""
+    diff = git(root, "diff", "-U0", "HEAD", "--", "*.pbxproj")
+    if not diff:
+        return []
+    changes, current = [], None
+    removed, added = defaultdict(list), defaultdict(list)
+    for line in diff.splitlines():
+        if line.startswith("+++ b/"):
+            current = line[6:]
+        m = re.match(r"^([+-])\s*(MARKETING_VERSION|CURRENT_PROJECT_VERSION) = ([^;]+);", line)
+        if m and current:
+            (added if m.group(1) == "+" else removed)[(current, m.group(2))].append(m.group(3).strip('"'))
+    for key in sorted(set(removed) | set(added)):
+        old = sorted(set(removed.get(key, [])))
+        new = sorted(set(added.get(key, [])))
+        if old != new:
+            changes.append({"file": key[0], "setting": key[1], "committed": old, "workingTree": new})
+    return changes
 
 
 def git_state(root):
@@ -760,7 +792,8 @@ def to_markdown(inv):
     out.append("")
     out.append(f"## Source signals ({inv['sources']['files']} files)")
     for name, data in inv["sources"]["signals"].items():
-        out.append(f"- {name}: {data['count']} — {data['samples'][0]}")
+        out.append(f"- {name}: {data['count']}")
+        out.extend(f"    {sample}" for sample in data["samples"])
     out.append("")
     ids = inv["sources"]["appStoreIds"]
     out.append("## Hardcoded App Store IDs (check with: fetch_apple.py lookup <id>)")
@@ -797,6 +830,13 @@ def main(argv=None):
                 plist_keys.update(merged_info_plist(t, proj["projectDir"])[2].keys())
     sdks = detect_sdks(projects, pins, pods, scan["imports"], plist_keys)
     flags = analyze(projects, scan, manifests, sdks, root)
+    for ch in version_changes(root):
+        flags.append(f"[upload] uncommitted change in {ch['file']}: {ch['setting']} {','.join(ch['committed']) or '-'} -> {','.join(ch['workingTree']) or '-'} "
+                     "(the next archive uses the working tree; compare with the builds already in App Store Connect)")
+    if any(s["name"] == "Google UMP (consent)" for s in sdks) and "ump_usage" not in scan["signals"]:
+        flags.append("[compliance] Google UMP is linked but never called: no consent message for EEA/UK users (Google policy, GDPR; not an App Review rule)")
+    if "permission_pre_dialog" in scan["signals"]:
+        flags.append(f"[5.1.1(iv)] custom pre-permission UI found; check it does not mimic a system alert or skip the system dialog: {scan['signals']['permission_pre_dialog']['samples'][0]}")
     inv = {
         "root": root,
         "git": git_state(root),

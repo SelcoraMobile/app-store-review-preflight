@@ -6,8 +6,9 @@ Usage:
   python3 -I guideline_sections.py GUIDELINES.txt show 1.2 2.1 3.1.2 [--children]
   python3 -I guideline_sections.py GUIDELINES.txt grep "third-party AI" [--context 1]
 
-"show" prints a section from its numbered line up to the next numbered line, so
-lettered sub-items such as 2.1(a)/(b) come with it. --children also prints numbered
+"show" prints a section from its numbered line up to the next numbered line. Lettered
+parts come with it whether they are bullets inside the section (2.1 (a)/(b)) or numbered
+lines of their own (3.1.2 -> 3.1.2(a), (b), (c)). --children also prints numbered
 subsections (1.2 -> 1.2.1). Quote guideline wording from this output, not from memory.
 """
 import argparse
@@ -55,7 +56,8 @@ def cmd_show(lines, sections, args):
     wanted = args.numbers
     found = set()
     for number, start, end in sections:
-        hit = number in wanted or (args.children and any(number.startswith(w + ".") or number.startswith(w + "(") for w in wanted))
+        lettered = any(number.startswith(w + "(") for w in wanted)
+        hit = number in wanted or lettered or (args.children and any(number.startswith(w + ".") for w in wanted))
         if not hit:
             continue
         found.add(number)

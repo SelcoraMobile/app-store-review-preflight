@@ -18,10 +18,15 @@ problems. Report the problem by name; the code is for orientation.
 
 ## Getting evidence from what ships
 
-- **Resolved build settings** (read-only):
+- **Resolved build settings:**
   `xcodebuild -showBuildSettings -project <X.xcodeproj> -target <App> -configuration Release`
   (or `-workspace … -scheme …`). This resolves `.xcconfig` files and inheritance, which
   `inventory.py` does not.
+  - It is not strictly read-only. It can resolve Swift packages over the network and write
+    to DerivedData or `.swiftpm` folders. Ask the user before running it.
+  - When the target has no `.xcconfig` (the inventory lists them) and the setting is a
+    literal with no `$(…)`, the `project.pbxproj` value from `inventory.py` is already the
+    resolved value. It counts as validator-certain evidence without running Xcode.
 - **Built product:** `plutil -p <App>.app/Info.plist` for the merged Info.plist, and
   `codesign -d --entitlements :- <App>.app` for the entitlements as signed.
 - **Without uploading:** Xcode Organizer's "Validate App" runs the server-side validation.
@@ -45,8 +50,13 @@ problems. Report the problem by name; the code is for orientation.
 - **Which build ships:**
   - Find the build attached to the version in App Store Connect. If none is attached, the
     submission cannot go ahead.
-  - If the audit led to a code fix, the fix is not in any uploaded build until a new one is
-    uploaded and attached. Say so.
+  - Compare its upload time with the commits.
+    - App Store Connect dates carry a UTC offset, for example `2026-11-05T03:46:09-08:00`.
+    - Run `git log --since=<that time> --format='%h %cI %s'`.
+    - Every fix committed after the upload, or still uncommitted, is missing from that
+      build and needs the next one.
+  - `inventory.py` flags uncommitted edits to `CURRENT_PROJECT_VERSION` and
+    `MARKETING_VERSION` in project files. Xcode's target editor makes these silently.
 
 ## SDK and deployment target minimums
 

@@ -6,6 +6,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -41,6 +42,16 @@ class FetchAppleTests(unittest.TestCase):
         self.assertNotIn("skip me", text)
         self.assertNotIn("color:red", text)
         self.assertNotIn("no js", text)
+
+    def test_html_to_text_main_only_drops_navigation(self):
+        with open(os.path.join(FIXTURES, "page.html"), encoding="utf-8") as fh:
+            raw = fh.read()
+        full = fetch_apple.html_to_text(raw)
+        main = fetch_apple.html_to_text(raw, main_only=True)
+        self.assertIn("Explore Platforms", full)
+        self.assertNotIn("Explore Platforms", main)
+        self.assertNotIn("Developer Footer", main)
+        self.assertTrue(main.startswith("## Upcoming Requirements"))
 
     def test_docc_term_list_keeps_each_definition_with_its_term(self):
         with open(os.path.join(FIXTURES, "docc_reasons.json"), encoding="utf-8") as fh:
@@ -79,7 +90,12 @@ class GuidelineSectionTests(unittest.TestCase):
         return [n for n, _, _ in self.sections]
 
     def test_sections_found(self):
-        self.assertEqual(self.numbers(), ["1", "1.2", "1.2.1", "2", "2.1", "2.3.1"])
+        self.assertEqual(self.numbers(), ["1", "1.2", "1.2.1", "2", "2.1", "2.3.1", "3", "3.1.2", "3.1.2(a)", "3.1.2(c)", "3.1.3"])
+
+    def test_show_includes_lettered_sections(self):
+        _, out = self.run_cmd("show", "3.1.2")
+        self.assertIn("3.1.2(c) Subscription Information", out)
+        self.assertNotIn("3.1.3", out)
 
     def run_cmd(self, *argv):
         buf = io.StringIO()
@@ -100,8 +116,8 @@ class GuidelineSectionTests(unittest.TestCase):
         self.assertIn("Creator Content", out)
 
     def test_last_section_stops_before_footer(self):
-        _, out = self.run_cmd("show", "2.3.1")
-        self.assertIn("Notes for Review", out)
+        _, out = self.run_cmd("show", "3.1.3")
+        self.assertIn("Other Purchase Methods", out)
         self.assertNotIn("Last Updated", out)
 
     def test_grep_reports_section_numbers(self):
@@ -176,6 +192,32 @@ class InventoryTests(unittest.TestCase):
     def test_markdown_summary(self):
         self.assertIn("## Mechanical flags", self.md)
         self.assertIn("com.example.sample", self.md)
+
+    def test_reviewer_flags_consent_sdk_and_pre_dialog(self):
+        self.assertIn("reviewer_detection", self.inv["sources"]["signals"])
+        self.assertIn("Google UMP is linked but never called", self.flags)
+        self.assertIn("custom pre-permission UI found", self.flags)
+        self.assertIn("PushPrimer.swift", self.flags)
+
+    def test_uncommitted_build_number_change(self):
+        tmp = tempfile.mkdtemp()
+        repo = os.path.join(tmp, "repo")
+        shutil.copytree(os.path.join(FIXTURES, "SampleApp"), repo)
+        git = ["git", "-C", repo, "-c", "user.name=t", "-c", "user.email=t@example.com"]
+        subprocess.run(git[:3] + ["init", "-q"], check=True)
+        subprocess.run(git + ["add", "-A"], check=True)
+        subprocess.run(git + ["commit", "-q", "-m", "fixture"], check=True)
+        pbx = os.path.join(repo, "SampleApp.xcodeproj", "project.pbxproj")
+        with open(pbx, encoding="utf-8") as fh:
+            text = fh.read()
+        with open(pbx, "w", encoding="utf-8") as fh:
+            fh.write(text.replace("CURRENT_PROJECT_VERSION = 3;", "CURRENT_PROJECT_VERSION = 1;"))
+        out_json = os.path.join(tmp, "inv.json")
+        with redirect_stdout(io.StringIO()):
+            inventory.main([repo, "--json", out_json, "--md", os.path.join(tmp, "inv.md")])
+        with open(out_json, encoding="utf-8") as fh:
+            flags = "\n".join(json.load(fh)["flags"])
+        self.assertIn("CURRENT_PROJECT_VERSION 3 -> 1", flags)
 
     def test_debug_mask(self):
         mask = inventory.debug_mask(["a", "#if DEBUG", "b", "#else", "c", "#endif", "#if !DEBUG", "d", "#else", "e", "#endif"])

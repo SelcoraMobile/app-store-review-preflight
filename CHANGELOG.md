@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.1.0 (2026-11-05)
+
+Fixes from a field test: a fresh agent ran the skill on a real app (an AI photo app with
+subscriptions, ads and a backend) and reported what slowed it down or was missing.
+
+**Added**
+
+- **Step 0:** start from a rejection message or an earlier preflight report. The report
+  gets a "Previous issues" section with each item's status now.
+- **Which build gets reviewed:** compare the attached build's upload time (in UTC) with
+  later commits. `inventory.py` flags uncommitted edits to `CURRENT_PROJECT_VERSION` and
+  `MARKETING_VERSION`, which Xcode's target editor makes silently.
+- **Server-side review targeting:** `is_apple`-style flags, test-device lists, Apple IP
+  ranges, and switches based on region or date.
+- **`inventory.py`:**
+  - reviewer-flag names (`isApple`, `isTestDevice`, `isReviewer`…)
+  - "Google UMP is linked but never called"
+  - a `permission_pre_dialog` signal (custom and SDK-owned pre-permission dialogs)
+  - every kept sample per signal in the markdown
+- **Report:** a "Compliance notes (outside App Review)" section.
+- **`store-state.md`:** unanswered (`null`) age rating answers, custom EULA content (the
+  snapshot returns its first 300 characters), and UTC offsets on App Store Connect dates.
+
+**Fixed**
+
+- `guideline_sections.py show 3.1.2` now includes 3.1.2(a)-(c). Lettered parts that are
+  numbered lines of their own were dropped before.
+- `fetch_apple.py page` keeps only the page's `<main>` content, without site navigation;
+  `--keep-nav` restores the full page.
+- `SKILL.md` defines `<tmp>` and explains how `allowed-tools` pre-approval relates to the
+  shell-run scripts.
+- **validator-certain evidence:** literal `project.pbxproj` values count as resolved when
+  the target has no `.xcconfig`. `xcodebuild -showBuildSettings` can resolve packages and
+  write files, so the skill now says to ask first.
+- **Vendor privacy pages:** they can be read with `check_links.py --text`, and the
+  `compatibility` field mentions them.
+
 ## 1.0.0 (2026-11-05)
 
 First release by Selcora Mobile. Based on dabodamjan/app-store-rejection-checker (MIT,

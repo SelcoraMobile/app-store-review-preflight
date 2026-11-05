@@ -142,7 +142,8 @@
     async eula(appId) {
       const e = await get(`apps/${appId}/endUserLicenseAgreement`);
       if (e.error) return { customEula: false, status: e.error };
-      return { customEula: !!(e.data && e.data.attributes.agreementText), length: e.data ? (e.data.attributes.agreementText || '').length : 0 };
+      const text = e.data ? (e.data.attributes.agreementText || '') : '';
+      return { customEula: !!text, length: text.length, textStart: text.slice(0, 300) };
     },
   };
 

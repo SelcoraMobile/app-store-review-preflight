@@ -22,8 +22,10 @@ Analytics, Product Personalization, App Functionality, Other Purposes.
 | Adapty | https://adapty.io/docs/apple-app-privacy |
 | Sentry | https://docs.sentry.io/platforms/apple/data-management/apple-privacy-manifest/ |
 
-For other vendors, search their documentation for "App Store privacy" or "privacy
-nutrition label". Do not cite a URL you have not opened.
+To read a vendor page, run `python3 -I <skill>/scripts/check_links.py --text <url>` (works
+for any public page) or use a fetch tool. Cite what you read. For other vendors, search
+their documentation for "App Store privacy" or "privacy nutrition label". Do not cite a URL
+you have not opened.
 
 ## Typical collection
 

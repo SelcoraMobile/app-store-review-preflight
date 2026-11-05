@@ -83,6 +83,16 @@ also the `id` in `apps.apple.com/.../id<number>`.
 - No rows at all with a published state means "Data Not Collected". Check that against the
   SDK inventory.
 
+**Dates:** App Store Connect returns ISO dates with a UTC offset, for example
+`2026-11-05T03:46:09-08:00`. Convert to UTC before comparing with git commit times.
+
+**License agreement:** the snapshot returns whether a custom EULA is set, its length and
+its first 300 characters.
+
+- A custom EULA that is only a URL works as a link to the terms, but the App Store shows it
+  as the license text.
+- If the standard Apple EULA is used, the description needs the link instead.
+
 **Age rating:**
 
 - The 2025 questionnaire covers content, capabilities and in-app controls. Capabilities
@@ -91,6 +101,11 @@ also the `id` in `apps.apple.com/.../id<number>`.
 - Social media questions were added on 2026-07-09.
 - From 2026-11-16, updates must also answer two new descriptors: Shared Location, and
   Dating and Relationships. All apps must answer them by 2027-01-12.
+- A `null` answer in the declaration (for example `socialMedia: null`) usually means the
+  question was never answered.
+  - Open the questionnaire in App Store Connect and answer every open item before Submit.
+  - Whether a particular unanswered item blocks submission was not verified this run.
+  - Put it in the submission checklist.
 - See `recent-changes.md`.
 
 ## Comparing drafts with what is live
