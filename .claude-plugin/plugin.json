@@ -1,0 +1,13 @@
+{
+  "name": "app-store-review-preflight",
+  "version": "1.0.0",
+  "description": "Pre-submission App Store review audit for iOS and iPadOS apps: Xcode project, App Store Connect state and the live App Review Guidelines, with evidence, fixes and confidence levels.",
+  "author": {
+    "name": "Selcora Mobile",
+    "url": "https://github.com/selcoramobile"
+  },
+  "homepage": "https://github.com/selcoramobile/app-store-review-preflight",
+  "repository": "https://github.com/selcoramobile/app-store-review-preflight",
+  "license": "MIT",
+  "keywords": ["app-store", "app-review", "app-store-connect", "ios", "ipados", "xcode", "privacy", "subscriptions", "rejection"]
+}

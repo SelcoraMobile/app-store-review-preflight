@@ -1,0 +1,133 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXNativeTarget section */
+		A00000000000000000000APP /* SampleApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000LST /* Build configuration list for PBXNativeTarget "SampleApp" */;
+			dependencies = (
+			);
+			name = SampleApp;
+			packageProductDependencies = (
+				A00000000000000000000PPD /* GoogleMobileAds */,
+			);
+			productName = SampleApp;
+			productType = "com.apple.product-type.application";
+		};
+		A00000000000000000000EXT /* SampleWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000LSW;
+			dependencies = (
+			);
+			name = SampleWidget;
+			productName = SampleWidget;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A00000000000000000000PRJ /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = A00000000000000000000LSP;
+			mainGroup = A00000000000000000000GRP;
+			packageReferences = (
+				A00000000000000000000PKG /* XCRemoteSwiftPackageReference */,
+			);
+			targets = (
+				A00000000000000000000APP /* SampleApp */,
+				A00000000000000000000EXT /* SampleWidget */,
+			);
+		};
+/* End PBXProject section */
+		A00000000000000000000GRP = {
+			isa = PBXGroup;
+			children = (
+			);
+			sourceTree = "<group>";
+		};
+
+/* Begin XCBuildConfiguration section */
+		A00000000000000000000PRL /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
+		A00000000000000000000ARL /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SampleApp/SampleApp.entitlements;
+				CURRENT_PROJECT_VERSION = 3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SampleApp/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo of your plant to identify it.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.sample;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A00000000000000000000WRL /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 2;
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.sample.widget;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A00000000000000000000LST = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000ARL /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		A00000000000000000000LSW = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000WRL /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+		A00000000000000000000LSP = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000PRL /* Release */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A00000000000000000000PKG /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A00000000000000000000PPD /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A00000000000000000000PKG /* XCRemoteSwiftPackageReference */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A00000000000000000000PRJ /* Project object */;
+}

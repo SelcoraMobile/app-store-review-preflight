@@ -1,0 +1,16 @@
+App Review Guidelines - Apple Developer
+## 1. Safety
+• 1.2 User-Generated Content
+Apps that enable users to create, generate, upload, share, or otherwise contribute content present particular challenges. This includes social media, user-generated content platforms, and AI content creation apps. To prevent abuse, such apps must include:
+• A method for filtering objectionable material from being posted to the app
+• A mechanism to report offensive content and timely responses to concerns
+• 1.2.1 Creator Content
+Apps which feature content from a specific community of users called "creators" are a great opportunity if properly moderated.
+## 2. Performance
+• 2.1 App Completeness
+• (a) Submissions to App Review should be final versions with all necessary metadata and fully functional URLs included.
+• (b) If you offer in-app purchases in your app, make sure they are complete, up-to-date, visible to the reviewer and functional.
+• 2.3.1
+• (a) All new features, functionality, and product changes must be described with specificity in the Notes for Review section.
+Last Updated: October 16, 2026
+## Developer Footer

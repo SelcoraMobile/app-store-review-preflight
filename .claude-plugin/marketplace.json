@@ -1,0 +1,16 @@
+{
+  "name": "selcoramobile",
+  "description": "Claude Code plugins from Selcora Mobile.",
+  "owner": {
+    "name": "Selcora Mobile",
+    "url": "https://github.com/selcoramobile"
+  },
+  "plugins": [
+    {
+      "name": "app-store-review-preflight",
+      "source": "./",
+      "description": "Pre-submission App Store review audit for iOS and iPadOS apps.",
+      "version": "1.0.0"
+    }
+  ]
+}

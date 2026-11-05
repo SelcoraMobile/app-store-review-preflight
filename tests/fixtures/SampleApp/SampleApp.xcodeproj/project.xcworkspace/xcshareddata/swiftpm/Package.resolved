@@ -1,0 +1,15 @@
+{
+  "originHash" : "0000",
+  "pins" : [
+    {
+      "identity" : "swift-package-manager-google-mobile-ads",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
+      "state" : {
+        "revision" : "0123456789abcdef",
+        "version" : "12.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}

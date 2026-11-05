@@ -1,0 +1,19 @@
+{
+  "metadata": {"title": "NSPrivacyAccessedAPITypeReasons"},
+  "abstract": [{"type": "text", "text": "The reasons your app uses APIs that require a declared reason."}],
+  "primaryContentSections": [
+    {"kind": "content", "content": [
+      {"type": "heading", "level": 3, "text": "User defaults APIs"},
+      {"type": "termList", "items": [
+        {"definition": {"content": [{"type": "paragraph", "inlineContent": [{"type": "text", "text": "Declare this reason to access user defaults that only the app itself can read."}]}]},
+         "term": {"inlineContent": [{"type": "text", "text": "CA92.1"}]}},
+        {"definition": {"content": [{"type": "paragraph", "inlineContent": [{"type": "text", "text": "This reason may only be declared by third-party SDKs."}]}]},
+         "term": {"inlineContent": [{"type": "text", "text": "C56D.1"}]}}
+      ]},
+      {"type": "unorderedList", "items": [
+        {"content": [{"type": "paragraph", "inlineContent": [{"type": "text", "text": "See "}, {"type": "reference", "identifier": "doc://x/bundleresources/privacy"}]}]}
+      ]}
+    ]}
+  ],
+  "references": {"doc://x/bundleresources/privacy": {"title": "Privacy manifest files", "url": "/documentation/bundleresources/privacy"}}
+}
