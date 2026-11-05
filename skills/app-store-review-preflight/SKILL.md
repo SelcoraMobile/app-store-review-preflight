@@ -6,7 +6,7 @@ compatibility: Needs network access to developer.apple.com and Python 3 for the 
 metadata:
   author: Selcora Mobile
   version: "1.0.0"
-  homepage: https://github.com/selcoramobile/app-store-review-preflight
+  homepage: https://github.com/SelcoraMobile/app-store-review-preflight
   based-on: https://github.com/dabodamjan/app-store-rejection-checker (MIT)
 allowed-tools: Read Grep Glob WebFetch WebSearch
 ---

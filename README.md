@@ -13,7 +13,7 @@ It then tells you what is likely to be rejected or refused at upload. Every find
 guideline number, evidence (file and line, or App Store Connect field), a concrete fix and
 an honest confidence level.
 
-Made by [Selcora Mobile](https://github.com/selcoramobile). Built on the open
+Made by [Selcora Mobile](https://github.com/SelcoraMobile). Built on the open
 [Agent Skills](https://agentskills.io) format, so it works in Claude Code and other agents
 that read `SKILL.md` skills.
 
@@ -65,14 +65,14 @@ pages, and rebuilt it around what we found. In short:
 **Claude Code, as a plugin:**
 
 ```
-/plugin marketplace add selcoramobile/app-store-review-preflight
+/plugin marketplace add SelcoraMobile/app-store-review-preflight
 /plugin install app-store-review-preflight@selcoramobile
 ```
 
 **Claude Code, as a plain skill:**
 
 ```bash
-git clone https://github.com/selcoramobile/app-store-review-preflight.git
+git clone https://github.com/SelcoraMobile/app-store-review-preflight.git
 mkdir -p ~/.claude/skills
 cp -R app-store-review-preflight/skills/app-store-review-preflight ~/.claude/skills/
 ```
