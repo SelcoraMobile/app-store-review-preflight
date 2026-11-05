@@ -126,7 +126,7 @@ interest without consent by relying on the terms of the European Union's General
 Protection Regulation ("GDPR") or similar statute", provided the app complies with all
 terms of that law.
 
-**Calibration**, kept from the upstream skill because it matches how enforcement behaves:
+**Calibration**, which matches how enforcement behaves:
 
 - **The pattern:** an analytics SDK collecting from launch, with no consent gate and no
   consent screen.

@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .venv/
 APP_REVIEW_PREFLIGHT.md
+APP_REVIEW_PREFLIGHT.html

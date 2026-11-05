@@ -1,13 +1,12 @@
 ---
 name: app-store-review-preflight
-description: Pre-submission App Store review audit for iOS and iPadOS apps. Reads the Xcode project, the App Store Connect state (metadata, subscriptions, App Privacy answers, builds, availability) and the live App Review Guidelines, then reports likely rejections and upload blockers, each tied to a guideline number or upload validation with evidence, a fix and a confidence level. Use before submitting an app or update, after a rejection, or when the user asks about App Review, review guidelines, rejection risk, App Store Connect readiness, privacy labels, paywall or subscription compliance, or whether the app will pass review.
+description: Pre-submission App Store review audit for iOS and iPadOS apps. Reads the Xcode project, the App Store Connect state (metadata, subscriptions, App Privacy answers, builds, availability) and the live App Review Guidelines, then reports likely rejections and upload blockers, each tied to a guideline number or upload validation with evidence, a fix and a confidence level, as a markdown report and an interactive HTML page. Use before submitting an app or update, after a rejection, or when the user asks about App Review, review guidelines, rejection risk, App Store Connect readiness, privacy labels, paywall or subscription compliance, or whether the app will pass review.
 license: MIT
 compatibility: Needs network access to developer.apple.com (and to vendor documentation pages for SDK checks) and Python 3 for the bundled scripts (stdlib only). Built for repositories with an Xcode project or Swift package. App Store Connect checks need read access through an API tool, a signed-in browser session, or metadata the user pastes.
 metadata:
   author: Selcora Mobile
-  version: "1.1.0"
+  version: "1.2.0"
   homepage: https://github.com/SelcoraMobile/app-store-review-preflight
-  based-on: https://github.com/dabodamjan/app-store-rejection-checker (MIT)
 allowed-tools: Read Grep Glob WebFetch WebSearch
 ---
 
@@ -32,8 +31,8 @@ their output.
 ## Ground rules
 
 1. **Read-only.** The audit changes nothing in the repository, in App Store Connect or on
-   any server. The one exception is the report file (Step 9). Fixes come after the report,
-   one at a time, each with the user's go-ahead (Step 10).
+   any server. The only exceptions are the two report files (Step 9). Fixes come after the
+   report, one at a time, each with the user's go-ahead (Step 10).
 2. **Evidence or nothing.** Every finding cites a guideline number or a named upload
    validation, shows evidence (file and line, build setting, App Store Connect field),
    carries one confidence level from Step 9 and states a concrete fix.
@@ -264,7 +263,29 @@ Follow `references/report-template.md`.
 
 **Where it goes:** Save the report as a markdown file (default `APP_REVIEW_PREFLIGHT.md` at
 the repository root, or wherever the user wants it) and post the summary table in chat. Do
-not commit the file unless asked.
+not commit the files unless asked.
+
+**HTML page:** then render the same report as an interactive page next to it:
+
+```bash
+python3 -I <skill>/scripts/render_report.py APP_REVIEW_PREFLIGHT.md --out APP_REVIEW_PREFLIGHT.html --lang <en|tr>
+```
+
+- It writes one self-contained file: no network requests, no external assets, every
+  piece of report text escaped.
+- The page has counts per confidence level and a filter for each. It also has a filter for
+  findings that need a new build, a search box and one card per finding. The submission
+  checklist becomes checkboxes. The page has a table of contents, light and dark themes, a
+  copy button per finding and a print layout.
+- `--lang` sets the language of the page's buttons and labels. `en` and `tr` are built in.
+  For another language, pass `--labels <json>` with translated values for the keys in
+  `LABELS["en"]` of the script.
+- The markdown stays the source of truth. Re-render the page whenever the markdown changes.
+- Read what the script prints. A warning means the markdown left the template: a finding
+  without a confidence level, or a findings table whose rows do not match the
+  `### [guideline] title` findings. Fix the markdown and render again.
+- Give the user the paths of both files. If Python is not available, say that the HTML page
+  was skipped.
 
 **Structure:**
 
@@ -278,11 +299,14 @@ not commit the file unless asked.
 
    ```
    ### [guideline number or upload validation] short title
-   Confidence: validator-certain | review-risk | judgment-call
-   Evidence: what was found, with file:line, build setting or App Store Connect field
-   Why it matters: one or two sentences quoting the live guideline text
-   Fix: the concrete change; say whether it needs a new build or only App Store Connect
+   - **Confidence:** validator-certain | review-risk | judgment-call
+   - **Evidence:** what was found, with file:line, build setting or App Store Connect field
+   - **Why it matters:** one or two sentences quoting the live guideline text
+   - **Fix:** the concrete change; say whether it needs a new build or only App Store Connect
    ```
+
+   Translate the labels into the report's language. Keep the `### [guideline] title`
+   heading and the three confidence identifiers verbatim: the HTML page keys on them.
 
 4. **Previous issues** (when Step 0 found any): each earlier rejection point or report
    item with its status now.
@@ -344,6 +368,7 @@ not commit the file unless asked.
 **How to apply them:**
 
 - Ask before each change in App Store Connect.
+- When a fix changes the report, update the markdown and render the HTML page again.
 - Read it back after saving and confirm it matches the source.
 - Never press Submit for Review, never send anything to Apple, never change pricing or
   availability, never delete anything, unless the user asks for that specific action.

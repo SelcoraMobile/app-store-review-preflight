@@ -52,8 +52,7 @@ the verification note.
 - 4.7: HTML5 and JavaScript mini apps and games in scope.
 - 5.1.2(i) gained the third-party AI sentence: "You must clearly disclose where personal
   data will be shared with third parties, including with third-party AI, and obtain
-  explicit permission before doing so." It is present in the live text; the upstream skill
-  dates it to November 2025.
+  explicit permission before doing so." It is present in the live text.
 
 **Still moving:**
 

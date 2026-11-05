@@ -2,8 +2,20 @@
 
 Write the report in the user's language and keep guideline quotes in English. Save it as
 markdown (default `APP_REVIEW_PREFLIGHT.md` in the repository root, or where the user
-wants it) and post the summary and the findings table in chat. Do not commit it unless
-asked. Do not pad: clean areas get one line each.
+wants it) and post the summary and the findings table in chat. Then render it as an
+interactive page with `scripts/render_report.py` (default `APP_REVIEW_PREFLIGHT.html`, see
+SKILL.md Step 9). Do not commit either file unless asked. Do not pad: clean areas get one
+line each.
+
+**What the HTML page reads.** Translate headings and labels freely. Keep these parts as
+they are, because the page keys on them:
+
+- each finding's `### [guideline] title` heading
+- the identifiers `validator-certain`, `review-risk` and `judgment-call`
+- the findings table: one row per finding, in the same order or numbered by the `#`
+  column, with "Needs new build" as the last column (`yes`/`no` or the same words in the
+  report's language)
+- checklist items written as `- [ ]` (or `- [x]` when already done)
 
 ```markdown
 # <App name> <version> (<build>): App Store review preflight
@@ -24,10 +36,10 @@ Top three: 1. … 2. … 3. …
 | 1 | 2.1(b) | … | review-risk | no |
 
 ### [2.1(b)] <short title>
-Confidence: review-risk
-Evidence: <file:line / build setting / App Store Connect field and value>
-Why it matters: "<live guideline quote>"
-Fix: <concrete change>. <New build: yes/no.>
+- **Confidence:** review-risk
+- **Evidence:** <file:line / build setting / App Store Connect field and value>
+- **Why it matters:** "<live guideline quote>"
+- **Fix:** <concrete change>. <New build: yes/no.>
 
 … (ordered by severity, then confidence)
 
@@ -79,11 +91,13 @@ Fix: <concrete change>. <New build: yes/no.>
 
 ```markdown
 ### [2.1(a)] Rate App and Recommend open a different app
-Confidence: review-risk
-Evidence: `Constant/Config.swift:9` builds `https://apps.apple.com/app/id6760262151`; iTunes
-Lookup returns "Sentra AI: Dating Coach & Rizz" (bundle com.sentraai.app), not this app
-(com.example.app). Used by Profile > Rate App (`?action=write-review`) and Profile > Recommend.
-Why it matters: 2.1(a) asks for "fully functional URLs" and rejects binaries that "exhibit
-obvious technical problems"; reviewers tap settings rows.
-Fix: use this app's Apple ID (App Store Connect > App Information > Apple ID). New build: yes.
+- **Confidence:** review-risk
+- **Evidence:** `Constant/Config.swift:9` builds `https://apps.apple.com/app/id6760262151`;
+  iTunes Lookup returns "Sentra AI: Dating Coach & Rizz" (bundle com.sentraai.app), not this
+  app (com.example.app). Used by Profile > Rate App (`?action=write-review`) and Profile >
+  Recommend.
+- **Why it matters:** 2.1(a) asks for "fully functional URLs" and rejects binaries that
+  "exhibit obvious technical problems"; reviewers tap settings rows.
+- **Fix:** use this app's Apple ID (App Store Connect > App Information > Apple ID).
+  New build: yes.
 ```

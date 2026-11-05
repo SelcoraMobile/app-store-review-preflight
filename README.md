@@ -17,11 +17,10 @@ Made by [Selcora Mobile](https://github.com/SelcoraMobile). Built on the open
 [Agent Skills](https://agentskills.io) format, so it works in Claude Code and other agents
 that read `SKILL.md` skills.
 
-## Why another review checker
+## What makes it different
 
-It started from [dabodamjan/app-store-rejection-checker](https://github.com/dabodamjan/app-store-rejection-checker)
-(MIT). We used that skill on a real submission, compared every claim with Apple's live
-pages, and rebuilt it around what we found. In short:
+Every claim in the skill was checked against Apple's live pages and tried on real
+submissions. In short:
 
 - **It reads App Store Connect, not only the repo.**
   - Repo-only audits miss two of the most common real problems: subscriptions the paywall
@@ -36,14 +35,14 @@ pages, and rebuilt it around what we found. In short:
   - They read Apple's client-rendered documentation through its DocC JSON instead of
     giving up on an empty page.
   - They verify App Store IDs with Apple's lookup API.
-- **Corrected facts.**
-  - The upstream example `C56D.1` is a UserDefaults reason that only third-party SDKs may
-    declare; apps use `CA92.1`.
+- **Facts checked against Apple's pages.**
+  - `C56D.1` is a UserDefaults reason that only third-party SDKs may declare; apps use
+    `CA92.1`.
   - Apple's published review time is "at least 50% … in less than 24 hours and 90% in less
     than 48 hours", not 90% in 24 hours.
   - An app's privacy manifest does not need `NSPrivacyTracking: true` because an ad SDK
     with its own manifest tracks.
-- **New checks.**
+- **Checks that are easy to miss.**
   - Product readiness (2.1(b)), and the App Privacy answers compared with an SDK data map.
   - ATT consistency in both directions, and face data (5.1.2(vi)).
   - Hardcoded App Store IDs that point at another app, and links that do not answer.
@@ -54,6 +53,9 @@ pages, and rebuilt it around what we found. In short:
   - Server-driven variants that the review notes should mention.
   - Calibrated 1.2 rules for AI generators, prediction features, and local-law questions
     for the countries you sell in.
+- **A report you can work through.** Next to the markdown report you get an interactive
+  HTML page: filters by confidence and by "needs a new build", search, one card per
+  finding, and the submission checklist as checkboxes.
 - **Safer by default.**
   - The skill pre-approves only read tools (no blanket shell access).
   - Scripts are read-only and stdlib-only, and their network access is limited.
@@ -112,7 +114,17 @@ The skill works through these steps:
 10. Offer fixes
 
 The report is saved as `APP_REVIEW_PREFLIGHT.md`, in the language you use, with a findings
-table and a submission checklist.
+table and a submission checklist. The same report is also saved as
+`APP_REVIEW_PREFLIGHT.html`, an interactive page you open in any browser:
+
+- **Overview:** counts per confidence level, and how many findings need a new build.
+- **Findings:** filters for confidence and "needs a new build", a search box, and one card
+  per finding (evidence, the guideline quote, the fix) with a copy-as-markdown button.
+- **Submission checklist:** checkboxes whose ticks stay in your browser.
+- **Reading:** table of contents, light and dark themes, a print layout.
+
+The page is a single file. It loads nothing from the network, and everything in the
+report is escaped, so text quoted from web pages or App Store Connect cannot run as code.
 
 ## What it checks
 
@@ -137,6 +149,7 @@ All scripts are Python 3 standard library only, read-only, and run as `python3 -
 | `guideline_sections.py` | Lists, prints or greps guideline sections by number from the fetched text. |
 | `inventory.py` | Inventories the repository: targets, merged release settings, generated Info.plist keys, purpose-string localizations, entitlements, privacy manifests, packages and pods, SDK detection, source signals, App Store IDs, hosts, git state, and mechanical flags. |
 | `check_links.py` | Checks that URLs answer and that App Store IDs belong to the app's bundle ID. Skips private hosts. Its `--text` mode prints a page as text, for privacy policies. |
+| `render_report.py` | Renders the markdown report as one self-contained, interactive HTML page. Offline, and it writes only the output file. A Content-Security-Policy allows only the page's own style and script. |
 | `asc_snapshot.js` | GET-only App Store Connect snapshot for a signed-in browser tab: versions, builds, localizations, review info, age rating, subscriptions, App Privacy answers, availability, EULA. Never returns passwords. |
 
 The skill's `allowed-tools` line pre-approves only Read, Grep, Glob, WebFetch and
@@ -174,8 +187,6 @@ claude plugin validate --strict .          # plugin and marketplace manifests
 Issues and pull requests are welcome. Please include the Apple page or rejection text that
 backs a new check.
 
-## Credits and license
+## License
 
-MIT, see [LICENSE](LICENSE). Portions are derived from
-[app-store-rejection-checker](https://github.com/dabodamjan/app-store-rejection-checker) by
-Damjan Dabo (MIT); its copyright notice is kept in the license.
+MIT, see [LICENSE](LICENSE).

@@ -30,6 +30,7 @@ fetch_apple = load("fetch_apple")
 guideline_sections = load("guideline_sections")
 inventory = load("inventory")
 check_links = load("check_links")
+render_report = load("render_report")
 
 
 class FetchAppleTests(unittest.TestCase):
@@ -240,6 +241,91 @@ class CheckLinksTests(unittest.TestCase):
                               os.path.join(FIXTURES, "guidelines.txt"), "list"], capture_output=True, text=True)
         self.assertEqual(out.returncode, 0, out.stderr)
         self.assertIn("2.3.1", out.stdout)
+
+
+class RenderReportTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        with open(os.path.join(FIXTURES, "report.md"), encoding="utf-8") as fh:
+            cls.markdown = fh.read()
+        cls.page, cls.doc = render_report.render(cls.markdown, version="test")
+
+    def test_findings_confidence_and_new_build(self):
+        cards = self.doc["cards"]
+        self.assertEqual([c["guideline"] for c in cards], ["2.1(b)", "Upload: iPad orientations", "5.1.2(i)", "4.3(a)"])
+        self.assertEqual([c["conf"] for c in cards], ["validator-certain", "review-risk", "review-risk", "judgment-call"])
+        self.assertEqual([c["build"] for c in cards], ["no", "yes", "yes", "no"])
+        self.assertEqual(cards[1]["qualifier"], "validator-blocking if shipped as-is; needs build verification")
+        self.assertEqual(self.doc["overview"]["mapping"], [0, 1, 2, 3])
+
+    def test_bold_and_plain_fields(self):
+        bulleted, plain_lines = self.doc["cards"][0], self.doc["cards"][2]
+        for card in (bulleted, plain_lines):
+            self.assertEqual([f["kind"] for f in card["fields"]], ["confidence", "evidence", "why", "fix"])
+        self.assertIn("Paywall/PaywallView.swift:88", render_report.blocks_text(bulleted["fields"][1]["blocks"]))
+        self.assertIn('class="field f-fix"', self.page)
+
+    def test_untrusted_text_is_escaped(self):
+        self.assertNotIn("<script>alert", self.page)
+        self.assertIn("&lt;script&gt;alert", self.page)
+        self.assertNotRegex(self.page, r'href="\s*javascript:')
+        self.assertIn('href="https://developer.apple.com/app-store/review/guidelines/#data-collection-and-storage"', self.page)
+        self.assertEqual(render_report.safe_href("JavaScript:alert(1)"), None)
+        self.assertEqual(render_report.safe_href("//evil.example/x"), None)
+        self.assertNotIn("<a", render_report.render_inline("[x](data:text/html,hi)"))
+
+    def test_page_is_self_contained_with_hash_csp(self):
+        import base64, hashlib, re
+        self.assertNotRegex(self.page, r"<(link|img|iframe)\b")
+        self.assertNotRegex(self.page, r"\bsrc=")
+        csp = re.search(r'Content-Security-Policy" content="([^"]+)"', self.page).group(1)
+        self.assertIn("default-src 'none'", csp)
+        for tag in ("style", "script"):
+            body = re.search(r"<%s>(.*?)</%s>" % (tag, tag), self.page, re.S).group(1)
+            digest = base64.b64encode(hashlib.sha256(body.encode("utf-8")).digest()).decode()
+            self.assertIn("'sha256-%s'" % digest, csp)
+
+    def test_checklist_becomes_checkboxes(self):
+        self.assertEqual(self.page.count('type="checkbox" id="t-'), 4)
+        self.assertEqual(self.page.count(" checked>"), 1)
+        self.assertIn("data-progress=", self.page)
+
+    def test_inline_markdown(self):
+        out = render_report.render_inline("**Fix:** use `a|b` and *see* https://example.org/p.")
+        self.assertIn("<strong>Fix:</strong>", out)
+        self.assertIn("<code>a|b</code>", out)
+        self.assertIn("<em>see</em>", out)
+        self.assertIn('href="https://example.org/p"', out)
+        self.assertEqual(render_report.render_inline("INFOPLIST_KEY_UISupported_iPad"), "INFOPLIST_KEY_UISupported_iPad")
+        self.assertEqual(render_report.split_row("| 1 | `a | b` | x |"), ["1", "`a | b`", "x"])
+
+    def test_turkish_report_without_findings_table(self):
+        md = ("# Uygulama 1.0 (3): App Store inceleme ön kontrolü\n\n## Bulgular\n\n"
+              "### [2.1(a)] Değerlendir bağlantısı başka uygulamayı açıyor\n"
+              "Güven: review-risk\nKanıt: `Config.swift:9` başka bir App Store ID kullanıyor.\n"
+              "Neden önemli: 2.1(a) \"fully functional URLs\" ister.\n"
+              "Düzeltme: doğru Apple ID'yi kullanın. Yeni build: evet.\n\n"
+              "## Kontrol listesi\n- [ ] Build yüklendi\n")
+        page, doc = render_report.render(md, lang="tr", version="test")
+        card = doc["cards"][0]
+        self.assertEqual(card["conf"], "review-risk")
+        self.assertEqual(card["build"], "yes")
+        self.assertEqual([f["kind"] for f in card["fields"]], ["confidence", "evidence", "why", "fix"])
+        self.assertIn('<html lang="tr"', page)
+        self.assertIn("Bulgularda ara", page)
+        self.assertIn("<h1>Uygulama 1.0 (3)</h1>", page)
+
+    def test_cli_runs_isolated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out_path = os.path.join(tmp, "report.html")
+            out = subprocess.run([sys.executable, "-I", os.path.join(SCRIPTS, "render_report.py"),
+                                  os.path.join(FIXTURES, "report.md"), "--out", out_path, "--lang", "tr"],
+                                 capture_output=True, text=True)
+            self.assertEqual(out.returncode, 0, out.stderr)
+            self.assertIn("4 findings", out.stdout)
+            self.assertEqual(out.stderr, "")
+            with open(out_path, encoding="utf-8") as fh:
+                self.assertIn("Yeni build gerektiren", fh.read())
 
 
 if __name__ == "__main__":
